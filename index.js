@@ -8,6 +8,13 @@ app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
 
+// morgan.token("body", (req) =>
+//   req.method === "POST" && req.body ? req.body.name : ""
+// );
+// app.use(
+//   morgan(":method :url :status :res[content-length] - :response-time ms :body")
+// );
+
 let persons = [
   {
     id: 1,
