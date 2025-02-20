@@ -5,6 +5,7 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 
+app.use(express.static("dist"));
 app.use(cors());
 app.use(express.json());
 morgan.token("body", (req) => JSON.stringify(req.body));
@@ -32,7 +33,7 @@ let persons = [
   },
   {
     id: 3,
-    name: "Dan Abramov",
+    name: "Dan Lucifer",
     number: "12-43-234345",
   },
   {
