@@ -24,4 +24,4 @@ https://phonebook-hkqr.onrender.com/
 
 ### Info
 
-**POST** `/info`
+**GET** `/info`
