@@ -19,11 +19,27 @@ mongoose
 
 const contactSchema = new mongoose.Schema({
   name: {
+    minlength: 3,
     type: String,
-    minLength: 3,
     required: true,
   },
-  number: Number,
+  number: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        // Check for format: 2-3 numbers, hyphen, followed by numbers
+        // Total length must be 8 or more
+
+        return /^(\d{2,3})-(\d+)$/.test(v) && v.length >= 8;
+      },
+      message: (props) => {
+        // Examples of different props being used:
+        return `Validation failed for ${props.path}: '${props.value}'.
+                This field expects a phone number with format: XX-XXXXXX or XXX-XXXXX`;
+      },
+    },
+  },
 });
 
 contactSchema.set("toJSON", {
