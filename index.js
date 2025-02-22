@@ -67,10 +67,17 @@ app.get("/api/persons/:id", (request, response) => {
 });
 
 app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
+  // const id = Number(request.params.id);
+  // persons = persons.filter((person) => person.id !== id);
 
-  response.status(204).end();
+  // response.status(204).end();
+  Contact.findByIdAndDelete(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => {
+      response.status(400).send({ error: "malformatted id" });
+    });
 });
 
 app.post("/api/persons", (request, response) => {
