@@ -4,23 +4,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
-
-// MongoDB connection
-require("dotenv").config();
-const mongoose = require("mongoose");
-const url = process.env.MONGODB_URI;
-console.log("connecting to", url);
-
-mongoose.set("strictQuery", false);
-mongoose.connect(url);
-
-const contactSchema = new mongoose.Schema({
-  name: String,
-  number: Number,
-});
-
-const Contact = mongoose.model("Contact", contactSchema);
-// End of MongoDB connection
+const Contact = require("./models/contacts");
 
 const PORT = process.env.PORT || 3001;
 
