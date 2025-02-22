@@ -74,28 +74,43 @@ app.delete("/api/persons/:id", (request, response) => {
 });
 
 app.post("/api/persons", (request, response) => {
+  // const body = request.body;
+
+  // if (!body.name || !body.number) {
+  //   return response.status(400).json({
+  //     error: "name or number is missing",
+  //   });
+  // }
+
+  // if (persons.find((person) => person.name === body.name)) {
+  //   return response.status(400).json({
+  //     error: "name must be unique",
+  //   });
+  // }
+
+  // const person = {
+  //   id: persons.length + 1,
+  //   name: body.name,
+  //   number: body.number,
+  // };
+
+  // persons = persons.concat(person);
+  // response.json(person);
+
   const body = request.body;
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: "name or number is missing",
-    });
+  if (body.name === undefined) {
+    return response.status(400).json({ error: "name missing" });
   }
 
-  if (persons.find((person) => person.name === body.name)) {
-    return response.status(400).json({
-      error: "name must be unique",
-    });
-  }
-
-  const person = {
-    id: persons.length + 1,
+  const contact = new Contact({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-  response.json(person);
+  contact.save().then((result) => {
+    response.json(result);
+  });
 });
 
 app.get("/info", (request, response) => {
