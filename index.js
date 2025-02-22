@@ -1,5 +1,3 @@
-// Purpose: Backend server for phonebook app
-
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
@@ -13,6 +11,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
@@ -22,7 +22,7 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
 
-app.use(express.static("dist")); //The application can now be used from the backend address http://localhost:3001
+app.use(express.static("dist"));
 app.use(cors());
 app.use(express.json());
 morgan.token("body", (req) => JSON.stringify(req.body));
@@ -31,38 +31,40 @@ app.use(
 );
 
 app.get("/api/persons", (request, response) => {
-  // response.json(persons);
   Contact.find({}).then((result) => {
     response.json(result);
   });
-}); //The application can now be used from the backend address http://localhost:3001/api/persons
-
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
+  Contact.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
   Contact.findByIdAndDelete(request.params.id)
     .then((result) => {
       response.status(204).end();
     })
-    .catch((error) => {
-      response.status(400).send({ error: "malformatted id" });
-    });
+    .catch((error) => next(error));
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
-  if (body.name === undefined) {
+  if (!body.name) {
     return response.status(400).json({ error: "name missing" });
+  }
+
+  if (!body.number) {
+    return response.status(400).json({ error: "number missing" });
   }
 
   const contact = new Contact({
@@ -70,25 +72,57 @@ app.post("/api/persons", (request, response) => {
     number: body.number,
   });
 
-  contact.save().then((result) => {
-    response.json(result);
-  });
+  contact
+    .save()
+    .then((savedContact) => {
+      response.json(savedContact);
+    })
+    .catch((error) => next(error));
+});
+
+// New PUT endpoint to handle updates
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+
+  if (!body.name || !body.number) {
+    return response.status(400).json({
+      error: "name or number missing",
+    });
+  }
+
+  const contact = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Contact.findByIdAndUpdate(request.params.id, contact, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
+    .then((updatedContact) => {
+      if (updatedContact) {
+        response.json(updatedContact);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/info", (request, response) => {
-  const currentDate = new Date();
-  response.send(`
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${currentDate}</p>
-    `);
+  Contact.countDocuments({}).then((count) => {
+    const currentDate = new Date();
+    response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${currentDate}</p>
+      `);
+  });
 });
+
+app.use(unknownEndpoint);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-// handler of requests with unknown endpoint
-app.use(unknownEndpoint);
-
-// this has to be the last loaded middleware, also all the routes should be registered before this!
-app.use(errorHandler);
