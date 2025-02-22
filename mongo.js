@@ -1,4 +1,4 @@
-import { set, connect, Schema, model, connection } from "mongoose";
+const mongoose = require("mongoose");
 
 if (process.argv.length < 3) {
   console.log("give password as argument");
@@ -9,16 +9,16 @@ const password = process.argv[2];
 
 const url = `mongodb+srv://kadalthavala:${password}@cluster0.djilz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-set("strictQuery", false);
+mongoose.set("strictQuery", false);
 
-connect(url);
+mongoose.connect(url);
 
-const contactSchema = new Schema({
+const contactSchema = new mongoose.Schema({
   name: String,
   number: Number,
 });
 
-const Contact = model("Contact", contactSchema);
+const Contact = mongoose.model("Contact", contactSchema);
 
 if (process.argv.length === 3) {
   Contact.find({}).then((result) => {
@@ -26,7 +26,7 @@ if (process.argv.length === 3) {
     result.forEach((contact) => {
       console.log(`${contact.name} ${contact.number}`);
     });
-    connection.close();
+    mongoose.connection.close();
   });
   return;
 }
@@ -38,5 +38,5 @@ const contact = new Contact({
 
 contact.save().then((result) => {
   console.log(`added ${result.name} number ${result.number} to phonebook`);
-  connection.close();
+  mongoose.connection.close();
 });

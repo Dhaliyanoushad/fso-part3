@@ -1,11 +1,30 @@
+// Purpose: Backend server for phonebook app
+
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
 
+// MongoDB connection
+require("dotenv").config();
+const mongoose = require("mongoose");
+const url = process.env.MONGODB_URI;
+console.log("connecting to", url);
+
+mongoose.set("strictQuery", false);
+mongoose.connect(url);
+
+const contactSchema = new mongoose.Schema({
+  name: String,
+  number: Number,
+});
+
+const Contact = mongoose.model("Contact", contactSchema);
+// End of MongoDB connection
+
 const PORT = process.env.PORT || 3001;
 
-app.use(express.static("dist"));
+app.use(express.static("dist")); //The application can now be used from the backend address http://localhost:3001
 app.use(cors());
 app.use(express.json());
 morgan.token("body", (req) => JSON.stringify(req.body));
@@ -13,6 +32,8 @@ app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
 
+// This is the token that we defined in the previous part
+// We want to log the body of POST requests
 // morgan.token("body", (req) =>
 //   req.method === "POST" && req.body ? req.body.name : ""
 // );
@@ -44,8 +65,11 @@ let persons = [
 ];
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
-});
+  // response.json(persons);
+  Contact.find({}).then((result) => {
+    response.json(result);
+  });
+}); //The application can now be used from the backend address http://localhost:3001/api/persons
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
